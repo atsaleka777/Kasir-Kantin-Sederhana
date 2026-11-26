@@ -1,0 +1,28 @@
+{
+  "devDependencies": {
+    "@types/node": "^26.6.11",
+    "typescript": "^7.0.2"
+  },
+  "name": "kasir-kantin-sederhana",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "undici-types": "^8.9.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/atsaleka777/Kasir-Kantin-Sederhana.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/atsaleka777/Kasir-Kantin-Sederhana/issues"
+  },
+  "homepage": "https://github.com/atsaleka777/Kasir-Kantin-Sederhana#readme"
+}
