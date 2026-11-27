@@ -36,14 +36,76 @@ interface Transaksi {
 let daftarTransaksi: Transaksi[] = [];
 let idBerikutnya: number = 1;
 
-// Fungsi Create: Transaksi baru (pondasi kasir UTS)
-async function tambahTransaksi(): Promise<void> {
-    const nama: string = await input("Nama pembeli: ");
+// =====================================================================
+// MODUL FUNGSI PERHITUNGAN (Dengan Parameter & Return Value Bertipe)
+// =====================================================================
 
+// 1. Fungsi menghitung subtotal (parameter + return number)
+function hitungSubtotal(harga: number, jumlah: number): number {
+    return harga * jumlah;
+}
+
+// 2. Fungsi menentukan persen diskon (parameter + return number)
+function hitungDiskon(member: boolean, subtotal: number): number {
+    if (member && subtotal >= 50000) {
+        return 10;
+    }
+    if (!member && subtotal >= 100000) {
+        return 5;
+    }
+    return 0;
+}
+
+// 3. Arrow Function menghitung nominal potongan (parameter + return number)
+const hitungPotongan = (subtotal: number, diskon: number): number => {
+    return (subtotal * diskon) / 100;
+};
+
+// 4. Fungsi menghitung total akhir (parameter + return number)
+function hitungTotal(subtotal: number, diskon: number): number {
+    const potongan: number = hitungPotongan(subtotal, diskon);
+    return subtotal - potongan;
+}
+
+// 5. Fungsi menghitung kembalian tunai (parameter + return number)
+function hitungKembalian(uang: number, total: number): number {
+    return uang - total;
+}
+
+// =====================================================================
+// MODUL FUNGSI TAMPILAN (Tanpa Return / VOID)
+// =====================================================================
+
+// 6. Fungsi tanpa parameter & tanpa return (void)
+function tampilkanMenuKantin(): void {
     console.log("\n=== MENU KANTIN ===");
     console.log("1. Nasi Goreng - Rp15000");
     console.log("2. Mie Goreng  - Rp12000");
     console.log("3. Es Teh      - Rp5000");
+}
+
+// 7. Fungsi dengan parameter & tanpa return (void)
+function cetakStruk(trx: Transaksi): void {
+    console.log("\n===== STRUK =====");
+    console.log("ID       : #" + trx.id);
+    console.log("Nama     : " + trx.nama);
+    console.log("Barang   : " + trx.barang);
+    console.log("Jumlah   : " + trx.jumlah);
+    console.log("Subtotal : Rp" + trx.subtotal);
+    console.log("Diskon   : " + trx.diskon + "%");
+    console.log("Total    : Rp" + trx.total);
+    if (trx.metode === 1) {
+        console.log("Dibayar  : Rp" + trx.uang);
+        console.log("Kembali  : Rp" + trx.kembalian);
+    }
+}
+
+// Fungsi Create: Transaksi baru (pondasi kasir UTS)
+async function tambahTransaksi(): Promise<void> {
+    const nama: string = await input("Nama pembeli: ");
+
+    // Memanggil fungsi void tanpa parameter
+    tampilkanMenuKantin();
 
     const pilihan: number = Number(await input("Pilih menu: "));
     const jumlah: number = Number(await input("Jumlah: "));
@@ -82,21 +144,11 @@ async function tambahTransaksi(): Promise<void> {
             return;
     }
 
-    // Menghitung total
-    const subtotal: number = harga * jumlah;
-    let diskon: number = 0;
-
-    if (member && subtotal >= 50000) {
-        diskon = 10;
-    }
-
-    if (!member && subtotal >= 100000) {
-        diskon = 5;
-    }
-
-    const potongan: number = (subtotal * diskon) / 100;
-    let total: number = subtotal;
-    total -= potongan;
+    // Memanggil fungsi-fungsi perhitungan (return value)
+    const subtotal: number = hitungSubtotal(harga, jumlah);
+    const diskon: number = hitungDiskon(member, subtotal);
+    const potongan: number = hitungPotongan(subtotal, diskon);
+    const total: number = hitungTotal(subtotal, diskon);
 
     console.log("\n=== PEMBAYARAN ===");
     console.log("1. Cash");
@@ -113,8 +165,7 @@ async function tambahTransaksi(): Promise<void> {
             uang = Number(await input("Uang dibayar: Rp"));
 
             if (uang >= total) {
-                kembalian = uang;
-                kembalian -= total;
+                kembalian = hitungKembalian(uang, total);
                 console.log("Kembalian: Rp" + kembalian);
             } else {
                 console.log("Uang tidak cukup.");
@@ -139,6 +190,29 @@ async function tambahTransaksi(): Promise<void> {
             console.log("Metode pembayaran tidak tersedia.");
             return;
     }
+
+    const transaksiBaru: Transaksi = {
+        id: idBerikutnya++,
+        nama,
+        pilihan,
+        barang,
+        harga,
+        jumlah,
+        member,
+        subtotal,
+        diskon,
+        potongan,
+        total,
+        metode,
+        uang,
+        kembalian
+    };
+
+    // Operasi Array push()
+    daftarTransaksi.push(transaksiBaru);
+
+    // Memanggil fungsi void dengan parameter
+    cetakStruk(transaksiBaru);
 
     // Simpan transaksi ke array
     daftarTransaksi.push({
