@@ -190,7 +190,7 @@ function tampilkanData(): void {
 }
 
 // =====================================================================
-// 2. PENGULANGAN FOR...OF — Pencarian transaksi berdasarkan nama
+// 2. PENGULANGAN FOR...OF + ARRAY FILTER (SEARCH) — Pencarian nama pembeli
 // =====================================================================
 async function cariData(): Promise<void> {
     console.log("\n=== CARI TRANSAKSI ===");
@@ -201,20 +201,107 @@ async function cariData(): Promise<void> {
     }
 
     const kataKunci: string = (await input("Masukkan nama pembeli: ")).toLowerCase();
-    let ditemukan: number = 0;
 
-    for (const trx of daftarTransaksi) {
-        if (trx.nama.toLowerCase().includes(kataKunci)) {
-            console.log(
-                `- [ID: ${trx.id}] ${trx.nama} | ${trx.barang} x${trx.jumlah} | Total: Rp${trx.total}`
-            );
-            ditemukan++;
-        }
-    }
+    // Operasi Array filter(): menyaring elemen array yang namanya cocok
+    const hasilFilter: Transaksi[] = daftarTransaksi.filter((trx) =>
+        trx.nama.toLowerCase().includes(kataKunci)
+    );
 
-    if (ditemukan === 0) {
+    if (hasilFilter.length === 0) {
         console.log("Data tidak ditemukan.");
+        return;
     }
+
+    for (const trx of hasilFilter) {
+        console.log(
+            `- [ID: ${trx.id}] ${trx.nama} | ${trx.barang} x${trx.jumlah} | Total: Rp${trx.total}`
+        );
+    }
+}
+
+async function ubahData(): Promise<void> {
+    console.log("\n=== UBAH JUMLAH TRANSAKSI ===");
+
+    if (daftarTransaksi.length === 0) {
+        console.log("Belum ada data transaksi.");
+        return;
+    }
+
+    tampilkanData();
+    const idCari: number = Number(await input("Masukkan ID transaksi yang ingin diubah: "));
+
+    const trx = daftarTransaksi.find((item) => item.id === idCari);
+
+    if (!trx) {
+        console.log("ID transaksi tidak ditemukan.");
+        return;
+    }
+
+    const jumlahBaru: number = Number(
+        await input(`Jumlah baru untuk ${trx.barang} (sebelumnya ${trx.jumlah}): `)
+    );
+
+    if (isNaN(jumlahBaru) || jumlahBaru <= 0) {
+        console.log("Jumlah tidak valid.");
+        return;
+    }
+
+    const subtotalBaru: number = trx.harga * jumlahBaru;
+    let diskonBaru: number = 0;
+
+    if (trx.member && subtotalBaru >= 50000) {
+        diskonBaru = 10;
+    }
+
+    if (!trx.member && subtotalBaru >= 100000) {
+        diskonBaru = 5;
+    }
+
+    const potonganBaru: number = (subtotalBaru * diskonBaru) / 100;
+    const totalBaru: number = subtotalBaru - potonganBaru;
+
+    if (trx.metode === 1) {
+        const uangBaru: number = Number(await input(`Total baru Rp${totalBaru} | Uang dibayar: Rp`));
+        if (uangBaru < totalBaru) {
+            console.log("Uang tidak cukup. Perubahan dibatalkan.");
+            return;
+        }
+        trx.uang = uangBaru;
+        trx.kembalian = uangBaru - totalBaru;
+    } else {
+        trx.uang = totalBaru;
+        trx.kembalian = 0;
+    }
+
+    trx.jumlah = jumlahBaru;
+    trx.subtotal = subtotalBaru;
+    trx.diskon = diskonBaru;
+    trx.potongan = potonganBaru;
+    trx.total = totalBaru;
+
+    console.log(`Transaksi #${trx.id} berhasil diperbarui! Total baru: Rp${trx.total}`);
+}
+
+async function hapusData(): Promise<void> {
+    console.log("\n=== HAPUS TRANSAKSI ===");
+
+    if (daftarTransaksi.length === 0) {
+        console.log("Belum ada data transaksi.");
+        return;
+    }
+
+    tampilkanData();
+    const idHapus: number = Number(await input("Masukkan ID transaksi yang ingin dihapus: "));
+
+    const indeks: number = daftarTransaksi.findIndex((item) => item.id === idHapus);
+
+    if (indeks === -1) {
+        console.log("ID transaksi tidak ditemukan.");
+        return;
+    }
+
+    daftarTransaksi.splice(indeks, 1);
+    console.log(`Transaksi #${idHapus} berhasil dihapus.`);
 }
 
 // =====================================================================
@@ -228,6 +315,8 @@ async function main(): Promise<void> {
         console.log("1. Transaksi Baru (Create)");
         console.log("2. Tampilkan Semua Transaksi (Read)");
         console.log("3. Cari Transaksi (Search)");
+        console.log("4. Ubah Jumlah Transaksi (Update)");
+        console.log("5. Hapus Transaksi (Delete)");
         console.log("0. Keluar");
 
         menu = Number(await input("Pilih menu: "));
@@ -241,6 +330,12 @@ async function main(): Promise<void> {
                 break;
             case 3:
                 await cariData();
+                break;
+            case 4:
+                await ubahData();
+                break;
+            case 5:
+                await hapusData();
                 break;
             case 0:
                 console.log("Program selesai. Terima kasih!");
